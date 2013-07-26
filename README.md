@@ -3,7 +3,7 @@ anibooru
 A batch downloader script for danbooru.
 
 
-FEATURES
+Features
 --------
 - Subdirectories created in destination directory with search tags as
   name for easy organization.
@@ -11,7 +11,7 @@ FEATURES
 - Can set a limit on # of posts downloaded
 
 
-ROADMAP
+Roadmap
 -------
 Features that I plan to work on in the future (in no certain order):
 - Allow searching of pools
