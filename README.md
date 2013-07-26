@@ -2,7 +2,6 @@ anibooru
 ========
 A batch downloader script for danbooru.
 
-
 Features
 --------
 - Subdirectories created in destination directory with search tags as
@@ -10,6 +9,10 @@ Features
 - Script will not attempt to redownload files that already exist
 - Can set a limit on # of posts downloaded
 
+How To Use
+----------
+This script requires Python v3. To understand the command line parameters,
+simply type 'anibooru.py --help'.
 
 Roadmap
 -------
