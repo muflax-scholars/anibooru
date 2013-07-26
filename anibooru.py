@@ -1,16 +1,5 @@
-
-# Your username on danbooru.
-username = ''
-
-# This is your API Key. You can get this in your profile on danbooru.
-api_key = ''
-
 # Root domain URL for danbooru. Do not place a slash at the end.
 domain = 'http://danbooru.donmai.us'
-
-download_dir = 'pics'
-
-max_posts = 500
 
 from urllib.request import *
 from urllib.parse import *
@@ -18,6 +7,24 @@ import json
 from io import StringIO
 import os
 import os.path as osp
+import argparse
+
+NO_MAX = 100000
+
+parser = argparse.ArgumentParser( description='A script to automate downloading images on Danbooru' )
+parser.add_argument( '--username', '-u', help='Your username on danbooru' )
+parser.add_argument( '--api-key', '-k', help='Your API Key on danbooru (Can be found in your account profile)' )
+parser.add_argument( '--download-directory', '-d', help='The directory in which downloaded photos will be placed' )
+parser.add_argument( '--max-posts', '-m', default=NO_MAX, help='The script will not download more than this number of posts.' )
+parser.add_argument( 'tag', nargs='+', help='One or more tags to search with' )
+args = parser.parse_args()
+
+# Global variables based on user input arguments
+username = args.username
+api_key = args.api_key
+download_dir = args.download_directory
+max_posts = args.max_posts
+search_tags = args.tag
 
 #=============================================================
 
@@ -55,6 +62,7 @@ class RequestPosts:
         self._limit = limit
         
     def execute( self ):
+        print( 'Grabbing posts from page {}...'.format( self._page ) )
         url = UrlBuilder( 'posts.json' )
         url.addparam( 'page', self._page )
         url.addparam( 'limit', self._limit )
@@ -87,7 +95,7 @@ class Downloader:
             try:
                 urlretrieve( self._image_url, self._image_path )
             except:
-                print( '  > FAILED/CANCELED! Removing...' )
+                #print( '  > FAILED/CANCELED! Removing...' )
                 if osp.exists( self._image_path ):
                     os.remove( self._image_path )
                 raise
@@ -100,7 +108,6 @@ def request_posts( *tags ):
     request = RequestPosts( *tags )
     json = []
     while len( json ) < max_posts:
-        print( 'requesting' )
         new_json = request.execute()
         if not new_json:
             break
@@ -108,19 +115,23 @@ def request_posts( *tags ):
         json.extend( new_json[:max_posts - len(json)] )
         request.nextpage()
         
-    print( 'A total of {} posts found for downloading'.format( len(json) ) )
+    print( '\nA total of {} posts found for downloading'.format( len(json) ) )
+    print( '----------------------------------------------------' )
     
     downloader = Downloader( tags )
-    
     for post in json:
         downloader.image( post['md5'], post['file_ext'] )
         yield downloader
+        
+    print( '----------------------------------------------------' )
 
 #=============================================================
 
+print( 'Searching with tags:', search_tags )
+print( 'NOTICE: If there are a lot of search results, this will take a while...\n' )
+
 try:
-    for post in request_posts( 'shoes', 'fairy_tail' ):
+    for post in request_posts( *search_tags ):
         post.download()
 except:
-    print( ' ' )
-    print( 'Downloading was canceled or failed, aborting script...' )
+    print( '\nERROR: Downloading was canceled or failed, aborting script...' )
