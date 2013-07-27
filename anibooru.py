@@ -3,6 +3,7 @@ domain = 'http://danbooru.donmai.us'
 
 from urllib.request import *
 from urllib.parse import *
+from urllib.error import *
 import json
 from io import StringIO
 import os
@@ -22,8 +23,8 @@ args = parser.parse_args()
 # Global variables based on user input arguments
 username = args.username
 api_key = args.api_key
-download_dir = args.download_directory
-max_posts = args.max_posts
+download_dir = osp.normpath( args.download_directory )
+max_posts = int(args.max_posts)
 search_tags = args.tag
 
 #=============================================================
@@ -74,7 +75,7 @@ class RequestPosts:
 
 class Downloader:
     def __init__( self, search_tags ):
-        tags_dir = ' '.join( search_tags )
+        tags_dir = ' '.join( search_tags ).replace( ':', '-' )
         self._dest_dir = osp.join( download_dir, tags_dir )
         
         if not osp.exists( self._dest_dir ):
@@ -133,5 +134,7 @@ print( 'NOTICE: If there are a lot of search results, this will take a while...\
 try:
     for post in request_posts( *search_tags ):
         post.download()
-except:
-    print( '\nERROR: Downloading was canceled or failed, aborting script...' )
+except URLError as e:
+    print( '\nERROR: URL/HTTP error:', e.reason )
+except KeyboardInterrupt:
+    print( '\nScript cancelled. Goodbye!' )
