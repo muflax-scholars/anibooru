@@ -9,6 +9,7 @@ from io import StringIO
 import os
 import os.path as osp
 import argparse
+import math
 
 NO_MAX = 100000
 
@@ -74,9 +75,11 @@ class RequestPosts:
 #=============================================================
 
 class Downloader:
-    def __init__( self, search_tags ):
+    def __init__( self, search_tags, max_posts ):
         tags_dir = ' '.join( search_tags ).replace( ':', '-' )
         self._dest_dir = osp.join( download_dir, tags_dir )
+        self._count = 1
+        self._max = max_posts
         
         if not osp.exists( self._dest_dir ):
             os.makedirs( self._dest_dir )
@@ -89,9 +92,17 @@ class Downloader:
     def isdownloaded( self ):
         return osp.exists( self._image_path )
         
+    def _getprefix( self ):
+        padding = int(math.log10(self._max))+1
+        preformatted = '  {:>' + str(padding) + '}/{}> '
+        return preformatted.format( self._count, self._max )
+        
     def download( self ):
+        prefix = self._getprefix()
+        self._count += 1
+        
         if not self.isdownloaded():
-            print( '+ Downloading ' + self._filename )
+            print( prefix + 'Downloading ' + self._filename )
             
             try:
                 urlretrieve( self._image_url, self._image_path )
@@ -101,7 +112,7 @@ class Downloader:
                     os.remove( self._image_path )
                 raise
         else:
-            print( '- Skipping ' + self._filename + ' (already exists)' )
+            print( prefix + 'Skipping ' + self._filename + ' (already exists)' )
 
 #=============================================================
 
@@ -119,7 +130,7 @@ def request_posts( *tags ):
     print( '\nA total of {} posts found for downloading'.format( len(json) ) )
     print( '----------------------------------------------------' )
     
-    downloader = Downloader( tags )
+    downloader = Downloader( tags, len(json) )
     for post in json:
         downloader.image( post['md5'], post['file_ext'] )
         yield downloader
@@ -134,6 +145,8 @@ print( 'NOTICE: If there are a lot of search results, this will take a while...\
 try:
     for post in request_posts( *search_tags ):
         post.download()
+        
+    print( '\nDownloading of all images complete!' )
 except URLError as e:
     print( '\nERROR: URL/HTTP error:', e.reason )
 except KeyboardInterrupt:
