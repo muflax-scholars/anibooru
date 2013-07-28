@@ -2,6 +2,9 @@ anibooru
 ========
 A batch downloader script for danbooru.
 
+NOTE that this script is still a work in progress. If you find a bug,
+please create an issue on github and I'll fix them :) Thanks!
+
 Features
 --------
 - Subdirectories created in destination directory with search tags as
