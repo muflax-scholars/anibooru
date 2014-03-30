@@ -132,7 +132,12 @@ def request_posts( *tags ):
     
     downloader = Downloader( tags, len(json) )
     for post in json:
-        downloader.image( post['md5'], post['file_ext'] )
+        md5 = post.get('md5')
+        file_ext = post.get('file_ext')
+        if not md5 or not file_ext:
+            continue
+            
+        downloader.image( md5, file_ext )
         yield downloader
         
     print( '----------------------------------------------------' )
