@@ -1,7 +1,7 @@
 # This file contains all help text for this command line application.
 
 # Help text for the program itself.
-program_help='A script to automate downloading images on Danbooru'
+program_help = 'A script to automate downloading images on Danbooru'
 
 # All help text for command line arguments must be placed here.
 #

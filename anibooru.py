@@ -13,151 +13,159 @@ import math
 from help_text import help_text, program_help
 
 optional_args = (
-   ('-u', '--username', {}),
-   ('-k', '--api-key', {}),
-   ('-d', '--download-directory', {'default': '.'}),
-   ('-m', '--max-posts', {'default': 1000000})
+    ('-u', '--username', {}),
+    ('-k', '--api-key', {}),
+    ('-d', '--download-directory', {'default': '.'}),
+    ('-m', '--max-posts', {'default': 1000000})
 )
 
-parser = argparse.ArgumentParser( description=program_help )
-parser.add_argument( 'tag', nargs='+', help=help_text['tag'] )
+parser = argparse.ArgumentParser(description=program_help)
+parser.add_argument('tag', nargs='+', help=help_text['tag'])
 
 # Process optional arguments
 for short, long, other_args in optional_args:
-   parser.add_argument(long, short, help=help_text[long[2:]], **other_args)
-   
+    parser.add_argument(long, short, help=help_text[long[2:]], **other_args)
+
 args = parser.parse_args()
 
 # Global variables based on user input arguments
-download_dir = osp.normpath( args.download_directory )
+download_dir = osp.normpath(args.download_directory)
 max_posts = int(args.max_posts)
 search_tags = args.tag
 
 #=============================================================
 
+
 class UrlBuilder:
-    def __init__( self, operation ):
+
+    def __init__(self, operation):
         self._params = {}
         self._operation = operation
-        
+
         # These are needed for every operation
-        self.addparam( 'user', args.username )
-        self.addparam( 'api_key', args.api_key )
-        
-    def _formaturl( self, params ):
-        return '{}/{}?{}'.format( domain, self._operation, params )
-        
-    def addparam( self, name, value ):
+        self.addparam('user', args.username)
+        self.addparam('api_key', args.api_key)
+
+    def _formaturl(self, params):
+        return '{}/{}?{}'.format(domain, self._operation, params)
+
+    def addparam(self, name, value):
         self._params[name] = value
-        
-    def build( self ):
-        encoded_params = urlencode( self._params )
-        return urlopen( self._formaturl( encoded_params ) )
+
+    def build(self):
+        encoded_params = urlencode(self._params)
+        return urlopen(self._formaturl(encoded_params))
 
 #=============================================================
+
 
 class RequestPosts:
-    def __init__( self, *tags ):
+
+    def __init__(self, *tags):
         self._page = 1
-        self._limit = 100 # booru supports 100 max per request
+        self._limit = 100  # booru supports 100 max per request
         self._tags = list(tags)
-        
-    def nextpage( self ):
+
+    def nextpage(self):
         self._page += 1
-        
-    def limit( self, limit ):
+
+    def limit(self, limit):
         self._limit = limit
-        
-    def execute( self ):
-        print( 'Grabbing posts from page {}...'.format( self._page ) )
-        url = UrlBuilder( 'posts.json' )
-        url.addparam( 'page', self._page )
-        url.addparam( 'limit', self._limit )
-        url.addparam( 'tags', ' '.join( self._tags ) )
-        io = StringIO( url.build().read().decode() )
-        return json.load( io )
+
+    def execute(self):
+        print('Grabbing posts from page {}...'.format(self._page))
+        url = UrlBuilder('posts.json')
+        url.addparam('page', self._page)
+        url.addparam('limit', self._limit)
+        url.addparam('tags', ' '.join(self._tags))
+        io = StringIO(url.build().read().decode())
+        return json.load(io)
 
 #=============================================================
+
 
 class Downloader:
-    def __init__( self, search_tags, max_posts ):
-        tags_dir = ' '.join( search_tags ).replace( ':', '-' )
-        self._dest_dir = osp.join( download_dir, tags_dir )
+
+    def __init__(self, search_tags, max_posts):
+        tags_dir = ' '.join(search_tags).replace(':', '-')
+        self._dest_dir = osp.join(download_dir, tags_dir)
         self._count = 1
         self._max = max_posts
-        
-        if not osp.exists( self._dest_dir ):
-            os.makedirs( self._dest_dir )
-            
-    def image( self, md5, ext ):
+
+        if not osp.exists(self._dest_dir):
+            os.makedirs(self._dest_dir)
+
+    def image(self, md5, ext):
         self._filename = md5 + '.' + ext
-        self._image_path = osp.join( self._dest_dir, self._filename )
+        self._image_path = osp.join(self._dest_dir, self._filename)
         self._image_url = domain + '/data/' + self._filename
-        
-    def isdownloaded( self ):
-        return osp.exists( self._image_path )
-        
-    def _getprefix( self ):
-        padding = int(math.log10(self._max))+1
+
+    def isdownloaded(self):
+        return osp.exists(self._image_path)
+
+    def _getprefix(self):
+        padding = int(math.log10(self._max)) + 1
         preformatted = '  {:>' + str(padding) + '}/{}> '
-        return preformatted.format( self._count, self._max )
-        
-    def download( self ):
+        return preformatted.format(self._count, self._max)
+
+    def download(self):
         prefix = self._getprefix()
         self._count += 1
-        
+
         if not self.isdownloaded():
-            print( prefix + 'Downloading ' + self._filename )
-            
+            print(prefix + 'Downloading ' + self._filename)
+
             try:
-                urlretrieve( self._image_url, self._image_path )
+                urlretrieve(self._image_url, self._image_path)
             except:
                 #print( '  > FAILED/CANCELED! Removing...' )
-                if osp.exists( self._image_path ):
-                    os.remove( self._image_path )
+                if osp.exists(self._image_path):
+                    os.remove(self._image_path)
                 raise
         else:
-            print( prefix + 'Skipping ' + self._filename + ' (already exists)' )
+            print(prefix + 'Skipping ' + self._filename + ' (already exists)')
 
 #=============================================================
 
-def request_posts( *tags ):
-    request = RequestPosts( *tags )
+
+def request_posts(*tags):
+    request = RequestPosts(*tags)
     json = []
-    while len( json ) < max_posts:
+    while len(json) < max_posts:
         new_json = request.execute()
         if not new_json:
             break
-            
-        json.extend( new_json[:max_posts - len(json)] )
+
+        json.extend(new_json[:max_posts - len(json)])
         request.nextpage()
-        
-    print( '\nA total of {} posts found for downloading'.format( len(json) ) )
-    print( '----------------------------------------------------' )
-    
-    downloader = Downloader( tags, len(json) )
+
+    print('\nA total of {} posts found for downloading'.format(len(json)))
+    print('----------------------------------------------------')
+
+    downloader = Downloader(tags, len(json))
     for post in json:
         md5 = post.get('md5')
         file_ext = post.get('file_ext')
         if not md5 or not file_ext:
             continue
-            
-        downloader.image( md5, file_ext )
+
+        downloader.image(md5, file_ext)
         yield downloader
-        
-    print( '----------------------------------------------------' )
+
+    print('----------------------------------------------------')
 
 #=============================================================
 
-print( 'Searching with tags:', search_tags )
-print( 'NOTICE: If there are a lot of search results, this will take a while...\n' )
+print('Searching with tags:', search_tags)
+print(
+    'NOTICE: If there are a lot of search results, this will take a while...\n')
 
 try:
-    for post in request_posts( *search_tags ):
+    for post in request_posts(*search_tags):
         post.download()
-        
-    print( '\nDownloading of all images complete!' )
+
+    print('\nDownloading of all images complete!')
 except URLError as e:
-    print( '\nERROR: URL/HTTP error:', e.reason )
+    print('\nERROR: URL/HTTP error:', e.reason)
 except KeyboardInterrupt:
-    print( '\nScript cancelled. Goodbye!' )
+    print('\nScript cancelled. Goodbye!')
