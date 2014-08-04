@@ -16,7 +16,7 @@ NO_MAX = 100000
 parser = argparse.ArgumentParser( description='A script to automate downloading images on Danbooru' )
 parser.add_argument( '--username', '-u', help='Your username on danbooru' )
 parser.add_argument( '--api-key', '-k', help='Your API Key on danbooru (Can be found in your account profile)' )
-parser.add_argument( '--download-directory', '-d', help='The directory in which downloaded photos will be placed' )
+parser.add_argument( '--download-directory', '-d', default='.', help='The directory in which downloaded photos will be placed. Defaults to the current directory if unspecified.' )
 parser.add_argument( '--max-posts', '-m', default=NO_MAX, help='The script will not download more than this number of posts.' )
 parser.add_argument( 'tag', nargs='+', help='One or more tags to search with' )
 args = parser.parse_args()
