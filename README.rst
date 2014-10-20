@@ -8,6 +8,11 @@ A batch downloader script for danbooru_.
 
 .. contents::
 
+Requirements
+============
+
+- Python 3.0 (Minimum)
+
 Usage
 =====
 
