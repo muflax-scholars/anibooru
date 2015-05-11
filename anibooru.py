@@ -33,6 +33,8 @@ download_dir = osp.normpath(args.download_directory)
 max_posts = int(args.max_posts)
 search_tags = args.tag
 
+debug = False
+
 #=============================================================
 
 
@@ -88,20 +90,27 @@ class Downloader:
 
     def __init__(self, search_tags, max_posts):
         tags_dir = ' '.join(search_tags).replace(':', '-')
-        self._dest_dir = osp.join(download_dir, tags_dir)
+        self._raw_dir = osp.join(download_dir, "_raw")
+        self._tag_dir = osp.join(download_dir, tags_dir)
         self._count = 1
         self._max = max_posts
 
-        if not osp.exists(self._dest_dir):
-            os.makedirs(self._dest_dir)
+        if not osp.exists(self._raw_dir):
+            os.makedirs(self._raw_dir)
+        if not osp.exists(self._tag_dir):
+            os.makedirs(self._tag_dir)
 
     def image(self, md5, ext):
         self._filename = md5 + '.' + ext
-        self._image_path = osp.join(self._dest_dir, self._filename)
+        self._raw_image_path = osp.join(self._raw_dir, self._filename)
+        self._tag_image_path = osp.join(self._tag_dir, self._filename)
         self._image_url = domain + '/data/' + self._filename
 
     def isdownloaded(self):
-        return osp.exists(self._image_path)
+        return osp.exists(self._raw_image_path)
+
+    def islinked(self):
+        return osp.lexists(self._tag_image_path)
 
     def _getprefix(self):
         padding = int(math.log10(self._max)) + 1
@@ -116,14 +125,22 @@ class Downloader:
             print(prefix + 'Downloading ' + self._filename)
 
             try:
-                urlretrieve(self._image_url, self._image_path)
+                urlretrieve(self._image_url, self._raw_image_path)
             except:
                 #print( '  > FAILED/CANCELED! Removing...' )
-                if osp.exists(self._image_path):
-                    os.remove(self._image_path)
+                if osp.exists(self._raw_image_path):
+                    os.remove(self._raw_image_path)
                 raise
         else:
-            print(prefix + 'Skipping ' + self._filename + ' (already exists)')
+            if debug:
+                print(prefix + 'Skipping download: ' + self._filename + ' (already exists)')
+
+        if not self.islinked():
+            os.symlink(self._raw_image_path, self._tag_image_path)
+        else:
+            if debug :
+                print(prefix + 'Skipping link: ' + self._filename + ' (already exists)')
+
 
 #=============================================================
 
