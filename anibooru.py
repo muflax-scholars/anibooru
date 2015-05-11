@@ -145,6 +145,9 @@ class Downloader:
 
 #=============================================================
 
+extension_map = {
+    "jpeg": "jpg",
+}
 
 def request_posts(*tags):
     request = RequestPosts(*tags)
@@ -164,6 +167,9 @@ def request_posts(*tags):
     for post in json:
         md5 = post.get('md5')
         file_ext = post.get('file_ext')
+        if file_ext in extension_map:
+            file_ext = extension_map[file_ext]
+
         if not md5 or not file_ext:
             continue
 
