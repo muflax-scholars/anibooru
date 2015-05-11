@@ -181,8 +181,7 @@ def request_posts(*tags):
 #=============================================================
 
 print('Searching with tags:', search_tags)
-print(
-    'NOTICE: If there are a lot of search results, this will take a while...\n')
+# print('NOTICE: If there are a lot of search results, this will take a while...\n')
 
 try:
     for post in request_posts(*search_tags):
