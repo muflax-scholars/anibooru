@@ -122,7 +122,8 @@ class Downloader:
         self._count += 1
 
         if not self.isdownloaded():
-            print(prefix + 'Downloading ' + self._filename)
+            if debug:
+                print(prefix + 'Downloading ' + self._filename)
 
             try:
                 urlretrieve(self._image_url, self._raw_image_path)
