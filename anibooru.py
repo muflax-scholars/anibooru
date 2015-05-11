@@ -185,10 +185,10 @@ print('Searching with tags:', search_tags)
 
 try:
     for post in request_posts(*search_tags):
-        post.download()
-
+        try:
+            post.download()
+        except URLError as e:
+            print('\nERROR: URL/HTTP error:', e.reason, post._image_url)
     print('\nDownloading of all images complete!')
-except URLError as e:
-    print('\nERROR: URL/HTTP error:', e.reason)
 except KeyboardInterrupt:
     print('\nScript cancelled. Goodbye!')
